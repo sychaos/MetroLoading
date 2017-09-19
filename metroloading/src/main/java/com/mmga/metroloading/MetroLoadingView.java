@@ -81,6 +81,7 @@ public class MetroLoadingView extends View {
     }
 
     private void createIndicators() {
+        //rectIndicators装载图画的list
         rectIndicators = new ArrayList<>();
         for (int i = 0; i < mNumber; i++) {
             if (mHasShadow) {
@@ -118,6 +119,7 @@ public class MetroLoadingView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int size = MeasureSpec.getSize(heightMeasureSpec);
+        //centerPositionY为view的正中央
         centerPositionY = size / 2;
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
@@ -125,18 +127,20 @@ public class MetroLoadingView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        //在onDraw中绘制
         for (RectIndicator rectIndicator : rectIndicators) {
             rectIndicator.drawItself(canvas);
         }
     }
 
+    //动画开始
     public void start() {
-//        Log.d("mmga", "start");
         this.setVisibility(VISIBLE);
         valueAnimators.clear();
         for (int i = 0; i < mNumber; i++) {
             createAnimator(rectIndicators.get(i), i * mDelay);
         }
+        // 非常正确的使用方式
         animatorSet = new AnimatorSet();
         animatorSet.playTogether(valueAnimators);
         animatorSet.setDuration(mDuration);
@@ -145,11 +149,9 @@ public class MetroLoadingView extends View {
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
                 if (isAnimating) {
+                    // 无限循环
                     animatorSet.start();
-//                    Log.d("mmga", "restart");
-
                 } else {
-//                    Log.d("mmga", "end");
                 }
             }
         });
@@ -160,6 +162,7 @@ public class MetroLoadingView extends View {
 
     private void createAnimator(final RectIndicator indicator, int startDelay) {
         ValueAnimator animator = new ValueAnimator();
+        //  设置加速度
         animator.setInterpolator(new CustomInterpolator());
         animator.setFloatValues(0, 1f);
         animator.setDuration(mDuration);
@@ -180,8 +183,10 @@ public class MetroLoadingView extends View {
 
         @Override
         public void onAnimationUpdate(ValueAnimator animation) {
+            //可以理解为动画的完成度 0-1f
             float fraction = animation.getAnimatedFraction();
             float symmetry;
+            //把0.5以下的函数上折
             if (fraction < 0.5) {
                 symmetry = 2 * fraction;
             } else {
@@ -189,7 +194,7 @@ public class MetroLoadingView extends View {
             }
             int windowWidth = getWindowWidth();
 
-
+            //设置颜色 （名字起得好差啊）
             if (mTransformColorMode == COLOR_TRANS_MODE_LINEAR) {
                 colorEvaluator(fraction, rectIndicator, mColor, mTransformColor);
             } else if (mTransformColorMode == COLOR_TRANS_MODE_SYMMETRY) {
@@ -198,19 +203,21 @@ public class MetroLoadingView extends View {
                 //mTransformColorMode == COLOR_TRANS_MODE_NONE   do noting;
             }
 
-
+            //centerPositionY 为View的正中
             rectIndicator.setCenterPositionY(centerPositionY);
 
             if (mFadeInOut) {
+                // 两边深中间浅
                 rectIndicator.setAlpha((int) (255 * symmetry));
             }
 
             switch (mShape) {
                 case (circle):
+                    //  在该完成度下的x值
                     rectIndicator.setCenterPositionX((int) (fraction * (windowWidth + 2 * mRadius) - mRadius));
 
                     if (needTransform) {
-                        rectIndicator.setRadius((int) (mRadius +  symmetry * (mTransformRadius - mRadius)));
+                        rectIndicator.setRadius((int) (mRadius + symmetry * (mTransformRadius - mRadius)));
                     } else {
                         rectIndicator.setRadius(mRadius);
                     }
@@ -228,6 +235,7 @@ public class MetroLoadingView extends View {
                     }
                     break;
             }
+            //重新绘制
             invalidate();
         }
     }
@@ -252,6 +260,7 @@ public class MetroLoadingView extends View {
     private class CustomInterpolator implements TimeInterpolator {
         @Override
         public float getInterpolation(float input) {
+            //这个余弦取得我很惶恐啊
             return (float) (Math.asin(2 * input - 1) / Math.PI + 0.5);
         }
     }
